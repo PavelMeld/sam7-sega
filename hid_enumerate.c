@@ -22,10 +22,100 @@ typedef unsigned int   uint;
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define EP_NUMBER 1
 
+const unsigned char langDescrID[] = {
+	0x04, // bLength
+	0x03, // Descriptor Type (3)
+	0x09, // US 0x0409
+	0x04
+};
+
+const unsigned char langDescrKeyboard[] = {
+	0x1a, // bLength
+	0x03, // Descriptor Type (3)
+	'U', 0x00,
+	'S', 0x00,
+	'B', 0x00,
+	' ', 0x00,
+	'K', 0x00,
+	'E', 0x00,
+	'Y', 0x00,
+	'B', 0x00,
+	'O', 0x00,
+	'A', 0x00,
+	'R', 0x00,
+	'D', 0x00,
+};
+
+const unsigned char langDescrKeyboardSino[] = {
+	0x18, // bLength
+	0x03, // Descriptor Type (3)
+	'S', 0x00,
+	'I', 0x00,
+	'N', 0x00,
+	'O', 0x00,
+	' ', 0x00,
+	'W', 0x00,
+	'E', 0x00,
+	'A', 0x00,
+	'L', 0x00,
+	'T', 0x00,
+	'H', 0x00
+};
+
+const unsigned char keyboardDescriptor []  = {
+	0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x05, 0x07, 0x19, 0xe0, 0x29, 0xe7, 0x15, 0x00, 0x25, 0x01,
+	0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x95, 0x01, 0x75, 0x08, 0x81, 0x01, 0x95, 0x03, 0x75, 0x01,
+	0x05, 0x08, 0x19, 0x01, 0x29, 0x03, 0x91, 0x02, 0x95, 0x05, 0x75, 0x01, 0x91, 0x01, 0x95, 0x06,
+	0x75, 0x08, 0x15, 0x00, 0x26, 0xff, 0x00, 0x05, 0x07, 0x19, 0x00, 0x2a, 0xff, 0x00, 0x81, 0x00,
+	0xc0
+};
+
+const short keyboardDescriptor1[] = {
+  0x0105, // Usage Page (Generic Desktop) +
+  0x0609, // Usage (Generic Device Controls) ?
+  0x01A1, // Collection (Application) +
+  0x0705, //  Usage (Keyboard/keypad) + 
+  0xe019, //    Usage Minimum (e0)	?
+  0xe729, //    Usage Maximum (e7)  ?
+  0x0015, //    Logical Minimum (0) + 
+  0x0125, //    Logical Maximum (1) +
+  0x0175, //    Report Size (1)	+
+  0x0895, //    Report Count (3)
+
+  0x0281, //    3 Button bits, @mpv : positioning
+  0x0195, //    Report Count (1) + 
+  0x0875, //    Report Size (8) +
+
+  0x0181, //    6 bit padding ? 
+  0x0395, //    Report Count (3) + 
+  0x0175, //    Report Size (1) +
+
+  0x0805, //  Usage (LEDs)
+  0x0119, //    Usage Minimum (01)	?
+  0x0329, //    Usage Maximum (03)  ?
+
+  0x0291, //  Output @variable data
+  0x0595, //    Report Count (5) + 
+  0x0175, //    Report Size (1) +
+
+  0x0191, //  Output @constant array
+  0x0695, //    Report Count (5) + 
+  0x0875, //    Report Size (8) +
+  0x0015, //    Logical Minimum (0) + 
+  0x0125, //    Logical Maximum (1) !! must be 00 ff 26
+
+  0x0705, //  Usage (Keyboard)
+  0x0019, //    Usage Minimum (0)
+  0xe729, //    Usage Maximum (e7)  !! must be 2a ff 00 
+
+  0x0081, // Input 
+
+  0xC0C0
+};
 
 const short mouseDescriptor[] = {
   0x0105, // Usage Page (Generic Desktop)
-  0x0209, // Usage (Mouse)
+  0x0209, // Usage (Mouse)				
   0x01A1, // Collection (Application)
   0x0109, //  Usage (Pointer)
   0x00A1, //  Collection (Physical)
@@ -94,8 +184,8 @@ const char cfgDescriptor[] = {
 	0x00, // bAlternateSetting
 	0x01, // bNumEndpoints
 	0x03, // bInterfaceClass: HID code
-	0x01, // bInterfaceSubclass
-	0x02, // bInterfaceProtocol: Mouse
+	0x01, // bInterfaceSubclass  @mpv : 01 - Boot interface
+	0x01, // bInterfaceProtocol: Mouse @mpv : 01 - Keyboard protocol
 	0x00, // iInterface
 
 	/* HID Descriptor */
@@ -103,10 +193,10 @@ const char cfgDescriptor[] = {
 	0x21, // bDescriptor type: HID Descriptor Type
 	0x00, // bcdHID
 	0x01,
-	0x00, // bCountryCode
+	0x00, // bCountryCode @mpv 0 - not supported
 	0x01, // bNumDescriptors
-	0x22, // bDescriptorType
-	sizeof(mouseDescriptor), // wItemLength
+	0x22, // bDescriptorType (HID Report)
+	sizeof(keyboardDescriptor), // wItemLength
 	0x00,
 
 	/* Endpoint 1 descriptor */
@@ -114,7 +204,7 @@ const char cfgDescriptor[] = {
 	0x05,   // bDescriptorType
 	0x80 + EP_NUMBER,   // bEndpointAddress, Endpoint 01 - OUT
 	0x03,   // bmAttributes      INT
-	0x04,   // wMaxPacketSize: 3 bytes (button, x, y)
+	0x08,   // wMaxPacketSize: 8 bytes (Modifier, OEM + up to 6 scan codes)
 	0x00,
 	0x0A    // bInterval
 };
@@ -149,6 +239,7 @@ const char cfgDescriptor[] = {
 
 static uchar AT91F_UDP_IsConfigured(AT91PS_HID);
 static void AT91F_HID_SendReport(AT91PS_HID, char button, char x, char y);
+static void AT91F_HID_SendKey(AT91PS_HID, unsigned char key);
 static void AT91F_HID_Enumerate(AT91PS_HID);
 
 
@@ -162,6 +253,7 @@ AT91PS_HID AT91F_HID_Open(AT91PS_HID pHid, AT91PS_UDP pUdp)
 	pHid->currentConfiguration = 0;
 	pHid->IsConfigured = AT91F_UDP_IsConfigured;
 	pHid->SendReport   = AT91F_HID_SendReport;
+	pHid->SendKey   = AT91F_HID_SendKey;
 	return pHid;
 }
 
@@ -216,6 +308,34 @@ static void AT91F_HID_SendReport(AT91PS_HID pHid, char button, char x, char y)
 		while (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP);
 	}
 }
+
+static void AT91F_HID_SendKey(AT91PS_HID pHid, unsigned char key)
+{
+	AT91PS_UDP pUdp = pHid->pUdp;
+	
+	// Send report to the host
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+	pUdp->UDP_FDR[EP_NUMBER] = key;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+
+	pUdp->UDP_CSR[EP_NUMBER] |= AT91C_UDP_TXPKTRDY;
+
+	// Wait for the end of transmission
+	while ( !(pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) )
+		AT91F_UDP_IsConfigured(pHid);
+		
+	// Clear AT91C_UDP_TXCOMP flag
+	if (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) {
+		pUdp->UDP_CSR[EP_NUMBER] &= ~(AT91C_UDP_TXCOMP);
+		while (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP);
+	}
+}
+
 
 //*----------------------------------------------------------------------------
 //* \fn    AT91F_USB_SendData
@@ -318,6 +438,12 @@ static void AT91F_HID_Enumerate(AT91PS_HID pHid)
 			AT91F_USB_SendData(pUDP, devDescriptor, MIN(sizeof(devDescriptor), wLength));
 		else if (wValue == 0x200)  // Return Configuration Descriptor
 			AT91F_USB_SendData(pUDP, cfgDescriptor, MIN(sizeof(cfgDescriptor), wLength));
+		else if (wValue == 0x300)  // Return Language Descriptor
+			AT91F_USB_SendData(pUDP, langDescrID, MIN(sizeof(langDescrID), wLength));
+		else if (wValue == 0x301)  // Return Language Descriptor 1 
+			AT91F_USB_SendData(pUDP, langDescrKeyboardSino, MIN(sizeof(langDescrKeyboardSino), wLength));
+		else if (wValue == 0x302)  // Return Language Descriptor 2 
+			AT91F_USB_SendData(pUDP, langDescrKeyboard, MIN(sizeof(langDescrKeyboard), wLength));
 		else
 			AT91F_USB_SendStall(pUDP);
 		break;
@@ -396,7 +522,7 @@ static void AT91F_HID_Enumerate(AT91PS_HID pHid)
 	// handle HID class requests
 	case STD_GET_HID_DESCRIPTOR:
 		if (wValue == 0x2200)       // Return Mouse Descriptor
-			AT91F_USB_SendData(pUDP, (const char *) mouseDescriptor, MIN(sizeof(mouseDescriptor), wLength));
+			AT91F_USB_SendData(pUDP, (const char *) keyboardDescriptor, MIN(sizeof(keyboardDescriptor), wLength));
 		else
 			AT91F_USB_SendStall(pUDP);
 		break;

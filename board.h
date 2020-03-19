@@ -41,7 +41,7 @@
 //#define LED1			(1<<18)						// PA18   
 //#define LED2			(1<<17)						// PA17   
 //#define LED3			(1<<2)						// PA2 (added by author)  
-#define LED1			(1<<8)						// PA8
+#define LED1			(1<<10)						// PA8
 #define NB_LEB			3
 //#define LED_MASK		(LED1|LED2|LED3)
 #define LED_MASK		(LED1)

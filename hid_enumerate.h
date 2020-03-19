@@ -24,6 +24,7 @@ typedef struct _AT91S_HID
 	// Public Methods:
 	unsigned char (*IsConfigured) (struct _AT91S_HID *pCdc);
 	void (*SendReport)(struct _AT91S_HID *pCdc, char button, char x, char y);
+	void (*SendKey)(struct _AT91S_HID *pCdc, unsigned char button);
 } AT91S_HID, *AT91PS_HID;
 
 //* external function description

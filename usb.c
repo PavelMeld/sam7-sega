@@ -20,6 +20,8 @@
 unsigned long i = 0;
 
 struct _AT91S_HID 	HID;
+extern volatile unsigned long	time;
+
 
 
 //it's a simple delay
@@ -51,6 +53,7 @@ void AT91F_USB_Open(void)
 int usb_start ( void )
 {
 	int x = 0, y = 0;
+	unsigned long time_start;
  
      //AT91PS_SYSC pSysc=AT91C_BASE_SYSC;
      // pSysc->SYSC_RSTC_RMR |= 0xA5000001;// enable user reset 
@@ -63,44 +66,17 @@ int usb_start ( void )
     while (!HID.IsConfigured(&HID));
 
     // Start waiting some cmd
-    while (1) {
-		// Check enumeration
-		if (HID.IsConfigured(&HID)) {
 
-                        x=2;     
-                        y=0;
-                        for(i=0; i<100; i++) {
-                        HID.SendReport(&HID, 0, x, y);
-                        Delay(50000);
-                  
-                        }
-                  
-                        x=0;
-                        y=2;
-                        for(i=0; i<100; i++) {
-                        HID.SendReport(&HID, 0, x, y);
-                          Delay(50000);
-                  
-                        }
-                  
-                        x=-2;
-                        y=0;
-                        for(i=0; i<100; i++) {
-                        HID.SendReport(&HID, 0, x, y);
-                          Delay(50000);
-                  
-                        }
-                  
-                        x=0;
-                        y=-2;
-                       for(i=0; i<100; i++) {
-                        HID.SendReport(&HID, 0, x, y);
-                          Delay(50000);
-                  
-                        }
+	// Check enumeration
+	while (HID.IsConfigured(&HID) == 0) ;
 
-        }
-   }
+	//HID.SendKey(&HID, VOLUP_SCAN_CODE);
+	time_start = time;
+	while (time < time_start + 3);
+	HID.SendKey(&HID, 0);
+
 }
 
-
+void usb_send(unsigned char key) {
+	HID.SendKey(&HID, key);
+}

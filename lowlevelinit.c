@@ -54,7 +54,7 @@ void LowLevelInit(void)
 	
 	// Wait the startup time
 	while(!(pPMC->PMC_SR & AT91C_PMC_MOSCS));
-	
+
 	// PMC Clock Generator PLL Register setup
 	//
 	// The following settings are used:  DIV = 14
@@ -79,6 +79,7 @@ void LowLevelInit(void)
 	// Wait the startup time (until PMC Status register LOCK bit is set)
  	while(!(pPMC->PMC_SR & AT91C_PMC_LOCK));
  	
+	
 	// PMC Master Clock (MCK) Register setup
 	//
 	// CSS  = 3  (PLLCK clock selected)
@@ -87,14 +88,17 @@ void LowLevelInit(void)
 	//
 	// Note: Master Clock  MCK = 48054841 hz  (this is the CPU clock speed)
 	// result:  AT91C_PMC_MCKR = 0x00000007  (Master Clock Register)
-	pPMC->PMC_MCKR = AT91C_PMC_CSS_PLL_CLK | AT91C_PMC_PRES_CLK_2;
-	
+
+	//pPMC->PMC_MCKR = AT91C_PMC_CSS_PLL_CLK | AT91C_PMC_PRES_CLK_2;
+
 	// Set up the default interrupts handler vectors
 	AT91C_BASE_AIC->AIC_SVR[0] = (int) AT91F_Default_FIQ_handler;
+
 	for (i=1;i < 31; i++)
 	{
 	    AT91C_BASE_AIC->AIC_SVR[i] = (int) AT91F_Default_IRQ_handler;
 	}
+
 	AT91C_BASE_AIC->AIC_SPU  = (int) AT91F_Spurious_handler;
 
 }

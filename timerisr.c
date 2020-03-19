@@ -12,7 +12,8 @@
 #include "AT91SAM7S256.h"
 #include "board.h"
 
-unsigned long	tickcount = 0;							// global variable counts interrupts
+volatile unsigned long	tickcount = 0;							// global variable counts interrupts
+volatile unsigned long	time = 0;
 
 
 void Timer0IrqHandler (void) {
@@ -23,9 +24,17 @@ void Timer0IrqHandler (void) {
 
 	dummy = pTC->TC_SR;									// read TC0 Status Register to clear interrupt	
 	tickcount++;										// increment the tick count
+	if ((tickcount % 5) == 0)
+		time++;
 
 	//if  ((pPIO->PIO_ODSR & LED2) == LED2)
 	//	pPIO->PIO_CODR = LED2;							// turn LED2 (DS2) on	
 	//else
 	//	pPIO->PIO_SODR = LED2;							// turn LED2 (DS2) off
+}
+
+void mdelay(unsigned int delay) {
+	unsigned long end = tickcount + delay;
+
+	while (tickcount < end);
 }
