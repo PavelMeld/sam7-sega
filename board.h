@@ -38,13 +38,22 @@
 //------------------------  
 // Leds Definition   
 //------------------------  
-//#define LED1			(1<<18)						// PA18   
-//#define LED2			(1<<17)						// PA17   
-//#define LED3			(1<<2)						// PA2 (added by author)  
+// Inputs
+#define DB9_1_UP_Z		(1U<<0)
+#define DB9_2_DOWN_Y	(1U<<2)
+#define DB9_3_LEFT_X	(1U<<4)
+#define DB9_4_RIGHT		(1U<<6)
+#define DB9_6_AB		(1U<<8)
+#define DB9_7_SELECT	(1U<<10)
+#define DB9_9_START_C	(1U<<12)
+
 #define LED1			(1<<10)						// PA8
 #define NB_LEB			3
 //#define LED_MASK		(LED1|LED2|LED3)
 #define LED_MASK		(LED1)
+
+#define PA_INPUTS  (DB9_1_UP_Z|DB9_2_DOWN_Y|DB9_3_LEFT_X|DB9_4_RIGHT|DB9_6_AB|DB9_9_START_C)
+#define PA_OUTPUTS (DB9_7_SELECT)
 
 
 //----------------------------------  
