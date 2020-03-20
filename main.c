@@ -92,6 +92,13 @@ int	main (void) {
 
 	pad = readSixPad();
 	while (1) {
+		usb_send(0);
+		mdelay(1000);
+		usb_send(0xab);
+		mdelay(1000);
+	}
+
+	while (1) {
 		unsigned char up_down;
 		unsigned char left_right;
 		unsigned char a, b, c, start;

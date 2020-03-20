@@ -15,6 +15,8 @@
 #include "board.h"
 #include "hid_enumerate.h"
 
+static void AT91F_HID_SendJoypadTest(AT91PS_HID pHid, unsigned char key);
+
 typedef unsigned char  uchar;
 typedef unsigned short ushort;
 typedef unsigned int   uint;
@@ -62,83 +64,44 @@ const unsigned char langDescrKeyboardSino[] = {
 	'H', 0x00
 };
 
-const unsigned char keyboardDescriptor []  = {
-	0x05, 0x01, 0x09, 0x06, 0xa1, 0x01, 0x05, 0x07, 0x19, 0xe0, 0x29, 0xe7, 0x15, 0x00, 0x25, 0x01,
-	0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x95, 0x01, 0x75, 0x08, 0x81, 0x01, 0x95, 0x03, 0x75, 0x01,
-	0x05, 0x08, 0x19, 0x01, 0x29, 0x03, 0x91, 0x02, 0x95, 0x05, 0x75, 0x01, 0x91, 0x01, 0x95, 0x06,
-	0x75, 0x08, 0x15, 0x00, 0x26, 0xff, 0x00, 0x05, 0x07, 0x19, 0x00, 0x2a, 0xff, 0x00, 0x81, 0x00,
-	0xc0
-};
 
-const short keyboardDescriptor1[] = {
-  0x0105, // Usage Page (Generic Desktop) +
-  0x0609, // Usage (Generic Device Controls) ?
-  0x01A1, // Collection (Application) +
-  0x0705, //  Usage (Keyboard/keypad) + 
-  0xe019, //    Usage Minimum (e0)	?
-  0xe729, //    Usage Maximum (e7)  ?
-  0x0015, //    Logical Minimum (0) + 
-  0x0125, //    Logical Maximum (1) +
-  0x0175, //    Report Size (1)	+
-  0x0895, //    Report Count (3)
+char joypadDescriptor[] = {
+    0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
+    0x09, 0x04,                    // USAGE (Joystick)
+    0xa1, 0x01,                    // COLLECTION (Application)
 
-  0x0281, //    3 Button bits, @mpv : positioning
-  0x0195, //    Report Count (1) + 
-  0x0875, //    Report Size (8) +
-
-  0x0181, //    6 bit padding ? 
-  0x0395, //    Report Count (3) + 
-  0x0175, //    Report Size (1) +
-
-  0x0805, //  Usage (LEDs)
-  0x0119, //    Usage Minimum (01)	?
-  0x0329, //    Usage Maximum (03)  ?
-
-  0x0291, //  Output @variable data
-  0x0595, //    Report Count (5) + 
-  0x0175, //    Report Size (1) +
-
-  0x0191, //  Output @constant array
-  0x0695, //    Report Count (5) + 
-  0x0875, //    Report Size (8) +
-  0x0015, //    Logical Minimum (0) + 
-  0x0125, //    Logical Maximum (1) !! must be 00 ff 26
-
-  0x0705, //  Usage (Keyboard)
-  0x0019, //    Usage Minimum (0)
-  0xe729, //    Usage Maximum (e7)  !! must be 2a ff 00 
-
-  0x0081, // Input 
-
-  0xC0C0
-};
-
-const short mouseDescriptor[] = {
-  0x0105, // Usage Page (Generic Desktop)
-  0x0209, // Usage (Mouse)				
-  0x01A1, // Collection (Application)
-  0x0109, //  Usage (Pointer)
-  0x00A1, //  Collection (Physical)
-  0x0905, //    Usage Page (Buttons)
-  0x0119, //    Usage Minimumù (01)
-  0x0329, //    Usage Maximum (03)
-  0x0015, //    Logical Minimum (0)
-  0x0125, //    Logical Maximum (1)
-  0x0395, //    Report Count (3)
-  0x0175, //    Report Size (1)
-  0x0281, //    3 Button bits
-  0x0195, //    Report Count (1)
-  0x0575, //    Report Size (6)
-  0x0181, //    6 bit padding
-  0x0105, //    Generic desktop
-  0x3009, //    Usage (X)
-  0x3109, //    Usage(Y)
-  0x8115, //    Logical Minimum (-127)
-  0x7F25, //    Logical Maximum (127)
-  0x0875, //    Report Size (8)
-  0x0295, //    Report Count (2)
-  0x0681, //    2 position bytes
-  0xC0C0
+    0xa1, 0x00,                    //   COLLECTION (physical)
+    0x09, 0x31,                    //     USAGE (Y)
+    0x09, 0x30,                    //     USAGE (X)
+    0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
+    0x26, 0xff, 0x00,              //     LOGICAL_MAXIMUM (1)
+    0x75, 0x08,                    //     REPORT_SIZE (8)
+    0x95, 0x03,                    //     REPORT_COUNT (2)
+    0x81, 0x02,                    //     INPUT (Data,Var,Abs)
+    
+	0x05, 0x09,                    //     USAGE_PAGE (Button)
+	0x29, 0x02,                    //     USAGE_MAXIMUM (Button 2)
+	0x19, 0x01,                    //     USAGE_MINIMUM (Button 1)
+	0x95, 0x02,                    //     REPORT_COUNT (2)
+	0x75, 0x01,                    //     REPORT_SIZE (1)
+	0x25, 0x01,                    //     LOGICAL_MAXIMUM (1)
+	0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
+	0x81, 0x02,                    //     Input (Data, Variable, Absolute)
+	0x95, 0x01,                    //     Report Count (1)
+	0x75, 0x06,                    //     Report Size (6)
+	0x81, 0x01, 
+   /* 
+    0xa1, 0x02,                    //   COLLECTION (Logical)
+    0x05, 0x09,                    //     USAGE_PAGE (Button)
+    0x29, 0x08,                    //     USAGE_MAXIMUM (Button 8)
+    0x19, 0x01,                    //     USAGE_MINIMUM (Button 1)
+    0x95, 0x08,                    //     REPORT_COUNT (8)
+    0x75, 0x01,                    //     REPORT_SIZE (1)
+    0x25, 0x01,                    //     LOGICAL_MAXIMUM (1)
+    0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
+    0x81, 0x02,                    //     Input (Data, Variable, Absolute)
+	*/
+    0xc0                           // END_COLLECTION
 };
 
 // Check http://www.usb.org/developers/hidpage/#Class_Definition
@@ -177,15 +140,14 @@ const char cfgDescriptor[] = {
 	0xA0,   // CbmAttributes Bus powered + Remote Wakeup
 	0x32,   // CMaxPower: 100mA
 
-	/* Mouse Interface Descriptor Requirement */
 	0x09, // bLength
 	0x04, // bDescriptorType
 	0x00, // bInterfaceNumber
 	0x00, // bAlternateSetting
 	0x01, // bNumEndpoints
 	0x03, // bInterfaceClass: HID code
-	0x01, // bInterfaceSubclass  @mpv : 01 - Boot interface
-	0x01, // bInterfaceProtocol: Mouse @mpv : 01 - Keyboard protocol
+	0x00, // bInterfaceSubclass  @mpv : 00 - not subclass
+	0x00, // bInterfaceProtocol: @mpv : 00 - none (as above is 00)
 	0x00, // iInterface
 
 	/* HID Descriptor */
@@ -196,7 +158,7 @@ const char cfgDescriptor[] = {
 	0x00, // bCountryCode @mpv 0 - not supported
 	0x01, // bNumDescriptors
 	0x22, // bDescriptorType (HID Report)
-	sizeof(keyboardDescriptor), // wItemLength
+	sizeof(joypadDescriptor), // wItemLength
 	0x00,
 
 	/* Endpoint 1 descriptor */
@@ -262,7 +224,7 @@ AT91PS_HID AT91F_HID_Open(AT91PS_HID pHid, AT91PS_UDP pUdp)
 	pHid->currentConfiguration = 0;
 	pHid->IsConfigured = AT91F_UDP_IsConfigured;
 	pHid->SendReport   = AT91F_HID_SendReport;
-	pHid->SendKey   = AT91F_HID_SendKey;
+	pHid->SendKey   = AT91F_HID_SendJoypadTest;
 	pHid->SendJoypad   = AT91F_HID_SendJoypad;
 	return pHid;
 }
@@ -318,6 +280,33 @@ static void AT91F_HID_SendReport(AT91PS_HID pHid, char button, char x, char y)
 		while (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP);
 	}
 }
+
+unsigned char a1 = 0, a2 = 0;
+
+static void AT91F_HID_SendJoypadTest(AT91PS_HID pHid, unsigned char key) {
+	AT91PS_UDP pUdp = pHid->pUdp;
+	
+	// Send report to the host
+	pUdp->UDP_FDR[EP_NUMBER] = a1;	// AXIS 1
+	pUdp->UDP_FDR[EP_NUMBER] = a2;	// AXIS 2
+	pUdp->UDP_FDR[EP_NUMBER] = key;	// Buttons
+
+	a1++;
+	a2++;
+
+	pUdp->UDP_CSR[EP_NUMBER] |= AT91C_UDP_TXPKTRDY;
+
+	// Wait for the end of transmission
+	while ( !(pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) )
+		AT91F_UDP_IsConfigured(pHid);
+		
+	// Clear AT91C_UDP_TXCOMP flag
+	if (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) {
+		pUdp->UDP_CSR[EP_NUMBER] &= ~(AT91C_UDP_TXCOMP);
+		while (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP);
+	}
+}
+
 
 static void AT91F_HID_SendKey(AT91PS_HID pHid, unsigned char key)
 {
@@ -565,8 +554,8 @@ static void AT91F_HID_Enumerate(AT91PS_HID pHid)
 
 	// handle HID class requests
 	case STD_GET_HID_DESCRIPTOR:
-		if (wValue == 0x2200)       // Return Mouse Descriptor
-			AT91F_USB_SendData(pUDP, (const char *) keyboardDescriptor, MIN(sizeof(keyboardDescriptor), wLength));
+		if (wValue == 0x2200) 
+			AT91F_USB_SendData(pUDP, (const char *) joypadDescriptor, MIN(sizeof(joypadDescriptor), wLength));
 		else
 			AT91F_USB_SendStall(pUDP);
 		break;
