@@ -1,5 +1,6 @@
 #ifndef __USB_H
 #define __USB_H
+#include "joypad.h"
 
 #define W_SCAN_CODE		0x1A
 #define S_SCAN_CODE		0x16
@@ -13,12 +14,5 @@
 #define ENTER_SCAN_CODE	0x28
 
 int		usb_start ( void );
-void	usb_send(unsigned char key);
-void usb_send_joypad(
-		unsigned char up_down,
-		unsigned char left_right,
-		unsigned char a,
-		unsigned char b,
-		unsigned char c,
-		unsigned char start);
+void	usb_send_joypad(gamepad_t * pad);
 #endif

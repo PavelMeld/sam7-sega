@@ -91,17 +91,13 @@ int	main (void) {
 	initSixPad();
 
 	pad = readSixPad();
+
 	while (1) {
-		usb_send(0);
-		mdelay(1000);
-		usb_send(0xab);
+		usb_send_joypad(NULL);
 		mdelay(1000);
 	}
 
 	while (1) {
-		unsigned char up_down;
-		unsigned char left_right;
-		unsigned char a, b, c, start;
 
 		mdelay(10);
 
@@ -114,31 +110,7 @@ int	main (void) {
 		else
 			AT91C_BASE_PIOA->PIO_CODR = LED_MASK;							// PIO Set Output Data Register - turns off the four LEDs
 
-		up_down = 0;
-		left_right = 0;
-		a = 0;
-		b = 0;
-		c = 0;
-		start = 0;
-
-		if (next_pad.up)
-			up_down = W_SCAN_CODE;
-		if (next_pad.down)
-			up_down = S_SCAN_CODE;
-		if (next_pad.left)
-			left_right = A_SCAN_CODE;
-		if (next_pad.right)
-			left_right = D_SCAN_CODE;
-		if (next_pad.a)
-			a = Z_SCAN_CODE;
-		if (next_pad.b)
-			b = X_SCAN_CODE;
-		if (next_pad.c)
-			c = C_SCAN_CODE;
-		if (next_pad.start)
-			start = ENTER_SCAN_CODE;
-
-		usb_send_joypad(up_down, left_right, a, b, c, start);
+		usb_send_joypad(&next_pad);
 
 		memcpy(&pad, &next_pad, sizeof(pad));
 	}

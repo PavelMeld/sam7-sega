@@ -14,8 +14,7 @@
 //*----------------------------------------------------------------------------
 #include "board.h"
 #include "hid_enumerate.h"
-
-static void AT91F_HID_SendJoypadTest(AT91PS_HID pHid, unsigned char key);
+#include "joypad.h"
 
 typedef unsigned char  uchar;
 typedef unsigned short ushort;
@@ -65,43 +64,98 @@ const unsigned char langDescrKeyboardSino[] = {
 };
 
 
-char joypadDescriptor[] = {
-    0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
-    0x09, 0x04,                    // USAGE (Joystick)
-    0xa1, 0x01,                    // COLLECTION (Application)
+char joypadDescriptor_mpv[] = {
+    0x05, 0x01,                    // USAGE_PAGE (Generic Desktop) +
 
-    0xa1, 0x00,                    //   COLLECTION (physical)
-    0x09, 0x31,                    //     USAGE (Y)
-    0x09, 0x30,                    //     USAGE (X)
-    0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
-    0x26, 0xff, 0x00,              //     LOGICAL_MAXIMUM (1)
-    0x75, 0x08,                    //     REPORT_SIZE (8)
-    0x95, 0x03,                    //     REPORT_COUNT (2)
-    0x81, 0x02,                    //     INPUT (Data,Var,Abs)
-    
-	0x05, 0x09,                    //     USAGE_PAGE (Button)
-	0x29, 0x02,                    //     USAGE_MAXIMUM (Button 2)
-	0x19, 0x01,                    //     USAGE_MINIMUM (Button 1)
-	0x95, 0x02,                    //     REPORT_COUNT (2)
-	0x75, 0x01,                    //     REPORT_SIZE (1)
-	0x25, 0x01,                    //     LOGICAL_MAXIMUM (1)
-	0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
-	0x81, 0x02,                    //     Input (Data, Variable, Absolute)
-	0x95, 0x01,                    //     Report Count (1)
-	0x75, 0x06,                    //     Report Size (6)
-	0x81, 0x01, 
-   /* 
-    0xa1, 0x02,                    //   COLLECTION (Logical)
-    0x05, 0x09,                    //     USAGE_PAGE (Button)
-    0x29, 0x08,                    //     USAGE_MAXIMUM (Button 8)
-    0x19, 0x01,                    //     USAGE_MINIMUM (Button 1)
-    0x95, 0x08,                    //     REPORT_COUNT (8)
-    0x75, 0x01,                    //     REPORT_SIZE (1)
-    0x25, 0x01,                    //     LOGICAL_MAXIMUM (1)
-    0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
-    0x81, 0x02,                    //     Input (Data, Variable, Absolute)
-	*/
-    0xc0                           // END_COLLECTION
+    0x09, 0x04,                    // USAGE (Joystick)	+
+    0xa1, 0x01,                    // COLLECTION (Application) +
+
+	0x85, 0x01,                    //   REPORT 1
+    0xa1, 0x02,                    //     COLLECTION (Logical)
+	0x75, 0x08,                    //       REPORT_SIZE (8)
+    0x95, 0x02,                    //       REPORT_COUNT (2)
+    0x15, 0x00,                    //         LOGICAL_MINIMUM (0)
+    0x26, 0xff, 0x00,              //         LOGICAL_MAXIMUM (255)
+    0x35, 0x00,                    //         PHYSICAL_MINIMUM (0)
+    0x46, 0xff, 0x00,              //         PHYSICAL_MAXIMUM (255)
+
+    0x95, 0x02,                    //       REPORT_COUNT (2)
+    0x09, 0x30,                    //         USAGE (X)
+    0x09, 0x31,                    //         USAGE (Y)
+    0x81, 0x02,                    //         INPUT (Data,Var,Abs)
+	0x65, 0x00,                    //         UNITS (?)
+
+
+// 8-bit buttons
+	0x75, 0x01,                    //       REPORT_SIZE (1)
+    0x95, 0x08,                    //       REPORT_COUNT (8)
+	0x25, 0x01,                    //         LOGICAL_MAXIMUM (1)
+    0x45, 0x01,                    //         PHYSICAL_MAXIMUM (1)
+	0x05, 0x09,                    //         USAGE_PAGE (Button)
+	0x19, 0x01,                    //         USAGE_MINIMUM (Button 1)
+	0x29, 0x08,                    //         USAGE_MMAXIMUM (Button 8)
+    0x81, 0x02,                    //         INPUT (Data,Var,Abs)
+
+	0xC0,                          //     END COLLECTION
+	0xC0                           //   END COLLECTION
+};
+
+char joypadDescriptor[] = {
+    0x05, 0x01,                    // USAGE_PAGE (Generic Desktop) +
+
+    0x09, 0x04,                    // USAGE (Joystick)	+
+    0xa1, 0x01,                    // COLLECTION (Application) +
+
+	0x85, 0x01,                    //   REPORT 1
+    0xa1, 0x02,                    //     COLLECTION (Logical)
+	0x75, 0x08,                    //       REPORT_SIZE (8)
+    0x95, 0x02,                    //       REPORT_COUNT (2)
+    0x15, 0x00,                    //         LOGICAL_MINIMUM (0)
+    0x26, 0xff, 0x00,              //         LOGICAL_MAXIMUM (255)
+    0x35, 0x00,                    //         PHYSICAL_MINIMUM (0)
+    0x46, 0xff, 0x00,              //         PHYSICAL_MAXIMUM (255)
+
+    0x95, 0x02,                    //       REPORT_COUNT (2)
+	0x81, 0x01,                    //         Input (PADDING?)
+
+    0x95, 0x02,                    //       REPORT_COUNT (2)
+    0x09, 0x30,                    //         USAGE (X)
+    0x09, 0x31,                    //         USAGE (Y)
+    0x81, 0x02,                    //         INPUT (Data,Var,Abs)
+	0x65, 0x00,                    //         UNITS (?)
+
+// 4-bit padding
+	0x75, 0x01,                    //       REPORT_SIZE (1)
+    0x95, 0x04,                    //       REPORT_COUNT (4)
+	0x25, 0x01,                    //         LOGICAL_MAXIMUM (1)
+    0x45, 0x01,                    //         PHYSICAL_MAXIMUM (1)
+	0x81, 0x01,                    //         Input (PADDING?)
+
+// 10-bit buttons
+	0x75, 0x01,                    //       REPORT_SIZE (1)
+    0x95, 0x0A,                    //       REPORT_COUNT (10)
+	0x25, 0x01,                    //         LOGICAL_MAXIMUM (1)
+    0x45, 0x01,                    //         PHYSICAL_MAXIMUM (1)
+	0x05, 0x09,                    //         USAGE_PAGE (Button)
+	0x19, 0x01,                    //         USAGE_MINIMUM (Button 1)
+	0x29, 0x0A,                    //         USAGE_MMAXIMUM (Button 10)
+    0x81, 0x02,                    //         INPUT (Data,Var,Abs)
+
+// 2-bit padding
+	0x75, 0x01,                    //       REPORT_SIZE (1)
+    0x95, 0x02,                    //       REPORT_COUNT (2)
+	0x81, 0x01,                    //         Input (PADDING?)
+
+// 8-bit ??
+	0x06, 0x00, 0xff,              //       USAGE (0xFF 0x00)
+	0x75, 0x01,                    //       REPORT_SIZE (1)
+    0x95, 0x08,                    //       REPORT_COUNT (8)
+	0x25, 0x01,                    //         LOGICAL_MAXIMUM (1)
+    0x45, 0x01,                    //         PHYSICAL_MAXIMUM (1)
+	0x09, 0x01,                    //         LOCAL USAGE (0xFF 0x01)
+    0x81, 0x02,                    //         INPUT (Data,Var,Abs)
+	0xC0,                          //     END COLLECTION
+	0xC0                           //   END COLLECTION
 };
 
 // Check http://www.usb.org/developers/hidpage/#Class_Definition
@@ -201,17 +255,8 @@ const char cfgDescriptor[] = {
 
 static uchar AT91F_UDP_IsConfigured(AT91PS_HID);
 static void AT91F_HID_SendReport(AT91PS_HID, char button, char x, char y);
-static void AT91F_HID_SendKey(AT91PS_HID, unsigned char key);
 static void AT91F_HID_Enumerate(AT91PS_HID);
-static void AT91F_HID_SendJoypad(
-		AT91PS_HID pHid, 
-		unsigned char up_down,
-		unsigned char left_right,
-		unsigned char a,
-		unsigned char b,
-		unsigned char c,
-		unsigned char start
-);
+static void AT91F_HID_SendJoypad( AT91PS_HID pHid, gamepad_t * pad);
 
 
 //*----------------------------------------------------------------------------
@@ -224,7 +269,6 @@ AT91PS_HID AT91F_HID_Open(AT91PS_HID pHid, AT91PS_UDP pUdp)
 	pHid->currentConfiguration = 0;
 	pHid->IsConfigured = AT91F_UDP_IsConfigured;
 	pHid->SendReport   = AT91F_HID_SendReport;
-	pHid->SendKey   = AT91F_HID_SendJoypadTest;
 	pHid->SendJoypad   = AT91F_HID_SendJoypad;
 	return pHid;
 }
@@ -281,18 +325,43 @@ static void AT91F_HID_SendReport(AT91PS_HID pHid, char button, char x, char y)
 	}
 }
 
-unsigned char a1 = 0, a2 = 0;
-
-static void AT91F_HID_SendJoypadTest(AT91PS_HID pHid, unsigned char key) {
+static void AT91F_HID_SendJoypad(AT91PS_HID pHid, gamepad_t * pad) {
 	AT91PS_UDP pUdp = pHid->pUdp;
-	
-	// Send report to the host
-	pUdp->UDP_FDR[EP_NUMBER] = a1;	// AXIS 1
-	pUdp->UDP_FDR[EP_NUMBER] = a2;	// AXIS 2
-	pUdp->UDP_FDR[EP_NUMBER] = key;	// Buttons
+	unsigned char left_right = 0x7F;
+	unsigned char up_down = 0x7F;
+	unsigned char abcx	= 0x0F ;
+	unsigned char start_trig = 0x00;
 
-	a1++;
-	a2++;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x01;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x80;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x80;
+	pUdp->UDP_FDR[EP_NUMBER] = 0;
+	pUdp->UDP_FDR[EP_NUMBER] = 0;
+	pUdp->UDP_FDR[EP_NUMBER] = 0;
+	pUdp->UDP_FDR[EP_NUMBER] = 0;
+
+	//if (pad->up)		up_down = 0;
+	//if (pad->down)		up_down = 0xFF;
+	//if (pad->left)		left_right = 0;
+	//if (pad->right)		left_right = 0xFF;
+	//if (pad->a)			abcx |= 0x10;
+	//if (pad->b)			abcx |= 0x20;
+	//if (pad->c)			abcx |= 0x40;
+	//if (pad->x)			abcx |= 0x80;
+	//if (pad->start)		start_trig |= 0x20;
+	//if (pad->md)		start_trig |= 0x04;
+	//
+	//
+	//// Send report to the host
+	//pUdp->UDP_FDR[EP_NUMBER] = 0x01;
+	//pUdp->UDP_FDR[EP_NUMBER] = 0x80;
+	//pUdp->UDP_FDR[EP_NUMBER] = 0x80;
+	//pUdp->UDP_FDR[EP_NUMBER] = left_right;
+	//pUdp->UDP_FDR[EP_NUMBER] = up_down;
+	//pUdp->UDP_FDR[EP_NUMBER] = abcx;
+	//pUdp->UDP_FDR[EP_NUMBER] = start_trig;
+	//pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+
 
 	pUdp->UDP_CSR[EP_NUMBER] |= AT91C_UDP_TXPKTRDY;
 
@@ -308,66 +377,6 @@ static void AT91F_HID_SendJoypadTest(AT91PS_HID pHid, unsigned char key) {
 }
 
 
-static void AT91F_HID_SendKey(AT91PS_HID pHid, unsigned char key)
-{
-	AT91PS_UDP pUdp = pHid->pUdp;
-	
-	// Send report to the host
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-	pUdp->UDP_FDR[EP_NUMBER] = key;
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-
-	pUdp->UDP_CSR[EP_NUMBER] |= AT91C_UDP_TXPKTRDY;
-
-	// Wait for the end of transmission
-	while ( !(pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) )
-		AT91F_UDP_IsConfigured(pHid);
-		
-	// Clear AT91C_UDP_TXCOMP flag
-	if (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) {
-		pUdp->UDP_CSR[EP_NUMBER] &= ~(AT91C_UDP_TXCOMP);
-		while (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP);
-	}
-}
-
-static void AT91F_HID_SendJoypad(
-		AT91PS_HID pHid, 
-		unsigned char up_down,
-		unsigned char left_right,
-		unsigned char a,
-		unsigned char b,
-		unsigned char c,
-		unsigned char start
-) {
-	AT91PS_UDP pUdp = pHid->pUdp;
-	
-	// Send report to the host
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
-	pUdp->UDP_FDR[EP_NUMBER] = up_down;
-	pUdp->UDP_FDR[EP_NUMBER] = left_right;
-	pUdp->UDP_FDR[EP_NUMBER] = a;
-	pUdp->UDP_FDR[EP_NUMBER] = b;
-	pUdp->UDP_FDR[EP_NUMBER] = c;
-	pUdp->UDP_FDR[EP_NUMBER] = start;
-
-	pUdp->UDP_CSR[EP_NUMBER] |= AT91C_UDP_TXPKTRDY;
-
-	// Wait for the end of transmission
-	while ( !(pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) )
-		AT91F_UDP_IsConfigured(pHid);
-		
-	// Clear AT91C_UDP_TXCOMP flag
-	if (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) {
-		pUdp->UDP_CSR[EP_NUMBER] &= ~(AT91C_UDP_TXCOMP);
-		while (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP);
-	}
-}
 
 
 //*----------------------------------------------------------------------------

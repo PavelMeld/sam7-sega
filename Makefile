@@ -26,7 +26,7 @@ ODFLAGS	= -x --syms
 OBJECTS = crt.o	main.o timerisr.o timersetup.o isrsupport.o lowlevelinit.o blinker.o usb.o hid_enumerate.o joypad.o
 
 .flash: main.bin
-	./sam-ba_cdc_linux/sam-ba_64
+	../sam-ba_cdc_linux/sam-ba_64
 
 # make target called by Eclipse (Project -> Clean ...)
 clean:
