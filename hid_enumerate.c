@@ -241,6 +241,15 @@ static uchar AT91F_UDP_IsConfigured(AT91PS_HID);
 static void AT91F_HID_SendReport(AT91PS_HID, char button, char x, char y);
 static void AT91F_HID_SendKey(AT91PS_HID, unsigned char key);
 static void AT91F_HID_Enumerate(AT91PS_HID);
+static void AT91F_HID_SendJoypad(
+		AT91PS_HID pHid, 
+		unsigned char up_down,
+		unsigned char left_right,
+		unsigned char a,
+		unsigned char b,
+		unsigned char c,
+		unsigned char start
+);
 
 
 //*----------------------------------------------------------------------------
@@ -254,6 +263,7 @@ AT91PS_HID AT91F_HID_Open(AT91PS_HID pHid, AT91PS_UDP pUdp)
 	pHid->IsConfigured = AT91F_UDP_IsConfigured;
 	pHid->SendReport   = AT91F_HID_SendReport;
 	pHid->SendKey   = AT91F_HID_SendKey;
+	pHid->SendJoypad   = AT91F_HID_SendJoypad;
 	return pHid;
 }
 
@@ -322,6 +332,40 @@ static void AT91F_HID_SendKey(AT91PS_HID pHid, unsigned char key)
 	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
 	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
 	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+
+	pUdp->UDP_CSR[EP_NUMBER] |= AT91C_UDP_TXPKTRDY;
+
+	// Wait for the end of transmission
+	while ( !(pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) )
+		AT91F_UDP_IsConfigured(pHid);
+		
+	// Clear AT91C_UDP_TXCOMP flag
+	if (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP) {
+		pUdp->UDP_CSR[EP_NUMBER] &= ~(AT91C_UDP_TXCOMP);
+		while (pUdp->UDP_CSR[EP_NUMBER] & AT91C_UDP_TXCOMP);
+	}
+}
+
+static void AT91F_HID_SendJoypad(
+		AT91PS_HID pHid, 
+		unsigned char up_down,
+		unsigned char left_right,
+		unsigned char a,
+		unsigned char b,
+		unsigned char c,
+		unsigned char start
+) {
+	AT91PS_UDP pUdp = pHid->pUdp;
+	
+	// Send report to the host
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+	pUdp->UDP_FDR[EP_NUMBER] = 0x00;
+	pUdp->UDP_FDR[EP_NUMBER] = up_down;
+	pUdp->UDP_FDR[EP_NUMBER] = left_right;
+	pUdp->UDP_FDR[EP_NUMBER] = a;
+	pUdp->UDP_FDR[EP_NUMBER] = b;
+	pUdp->UDP_FDR[EP_NUMBER] = c;
+	pUdp->UDP_FDR[EP_NUMBER] = start;
 
 	pUdp->UDP_CSR[EP_NUMBER] |= AT91C_UDP_TXPKTRDY;
 

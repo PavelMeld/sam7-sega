@@ -15,6 +15,7 @@ typedef union gamepad_u {
 		unsigned int y:1;
 		unsigned int z:1;
 		unsigned int start:1;
+		unsigned int md:1;
 	};
 } gamepad_t;
 

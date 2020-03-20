@@ -89,7 +89,7 @@ void LowLevelInit(void)
 	// Note: Master Clock  MCK = 48054841 hz  (this is the CPU clock speed)
 	// result:  AT91C_PMC_MCKR = 0x00000007  (Master Clock Register)
 
-	//pPMC->PMC_MCKR = AT91C_PMC_CSS_PLL_CLK | AT91C_PMC_PRES_CLK_2;
+	pPMC->PMC_MCKR = AT91C_PMC_CSS_PLL_CLK | AT91C_PMC_PRES_CLK_2;
 
 	// Set up the default interrupts handler vectors
 	AT91C_BASE_AIC->AIC_SVR[0] = (int) AT91F_Default_FIQ_handler;

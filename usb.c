@@ -80,3 +80,13 @@ int usb_start ( void )
 void usb_send(unsigned char key) {
 	HID.SendKey(&HID, key);
 }
+
+void usb_send_joypad(
+		unsigned char up_down,
+		unsigned char left_right,
+		unsigned char a,
+		unsigned char b,
+		unsigned char c,
+		unsigned char start) {
+	HID.SendJoypad(&HID, up_down, left_right, a,b,c,start);
+}

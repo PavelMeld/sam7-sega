@@ -21,6 +21,7 @@
 #include "string.h"
 #include "usb.h"
 #include "timerisr.h"
+#include "joypad.h"
 
 //  *******************************************************
 //                Function Prototypes
@@ -42,27 +43,20 @@ extern	unsigned enableFIQ(void);
 unsigned int	FiqCount = 0;		// global uninitialized variable		
 
 
-int	main (void) {
-	
-	
+void setup() {
 	// Set up the LEDs (PA0 - PA3)
 	volatile AT91PS_PIO	pPIO = AT91C_BASE_PIOA;			// pointer to PIO data structure
-	pPIO->PIO_PER = LED_MASK | SW1_MASK;				// PIO Enable Register - allow PIO to control pins P0 - P3 and pin 19
-	pPIO->PIO_OER = LED_MASK;							// PIO Output Enable Register - sets pins P0 - P3 to outputs
-	pPIO->PIO_OWER = LED_MASK;							// PIO Output Enable Register - sets pins P0 - P3 to outputs
+	pPIO->PIO_PER = (PA_INPUTS|PA_OUTPUTS);
+	pPIO->PIO_OER = PA_OUTPUTS;							// PIO Output Enable Register - sets pins P0 - P3 to outputs
+	pPIO->PIO_OWER = PA_OUTPUTS;
+	pPIO->PIO_MDER = PA_OUTPUTS;
 	pPIO->PIO_IDR = 0xFFFFFFFF;							// Disable interrupts for all pins
 	pPIO->PIO_IFDR = 0xFFFFFFFF;						// Disable glitch filtering on all inputs
 
-
-	// Initialize the Atmel AT91SAM7S256 (watchdog, PLL clock, default interrupts, etc.)
 	LowLevelInit();
-	
 
-
-	// enable the Timer0 peripheral clock
-	volatile AT91PS_PMC	pPMC = AT91C_BASE_PMC;				// pointer to PMC data structure
-	pPMC->PMC_PCER = (1<<AT91C_ID_TC0)|(1<<AT91C_ID_PIOA);	// enable Timer0 peripheral clock
-	
+	// Setup timer0 to generate a 10 msec periodic interrupt
+	TimerSetup();
 
 	// Set up the AIC  registers for Timer 0  
 	volatile AT91PS_AIC	pAIC = AT91C_BASE_AIC;			// pointer to AIC data structure
@@ -75,76 +69,72 @@ int	main (void) {
 	pAIC->AIC_IDCR = (0<<AT91C_ID_TC0);					// Remove disable timer 0 interrupt in AIC Interrupt Disable Command Reg			
 	pAIC->AIC_IECR = (1<<AT91C_ID_TC0); 				// Enable the TC0 interrupt in AIC Interrupt Enable Command Register
 	
-	// Set up the AIC registers for FIQ (pushbutton SW1)
-	pAIC->AIC_IDCR = (1<<AT91C_ID_FIQ);					// Disable FIQ interrupt in AIC Interrupt Disable Command Register			
-	pAIC->AIC_SMR[AT91C_ID_FIQ] =						// Set the interrupt source type in AIC Source 
-    	(AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE);  		// Mode Register[0]
-	pAIC->AIC_ICCR = (1<<AT91C_ID_FIQ); 				// Clear the FIQ interrupt in AIC Interrupt Clear Command Register
-	pAIC->AIC_IDCR = (0<<AT91C_ID_FIQ);					// Remove disable FIQ interrupt in AIC Interrupt Disable Command Register			
-	pAIC->AIC_IECR = (1<<AT91C_ID_FIQ); 				// Enable the FIQ interrupt in AIC Interrupt Enable Command Register
-	
 
-	// Three functions from the libraries
-	//a = strlen(pText);									// strlen( ) returns length of a string
-	//x5 = fabs(y5);										// fabs( ) returns absolute value of a double
-	//n = atol(DigitBuffer);								// atol( ) converts string to a long
-	
-
-	// Setup timer0 to generate a 10 msec periodic interrupt
-	TimerSetup();
+	// enable the Timer0 peripheral clock
+	volatile AT91PS_PMC	pPMC = AT91C_BASE_PMC;				// pointer to PMC data structure
+	pPMC->PMC_PCER = (1<<AT91C_ID_TC0)|(1<<AT91C_ID_PIOA);	// enable Timer0 peripheral clock
 
 
 	// enable interrupts
 	enableIRQ();
 	enableFIQ();
 
-	while (1) {
-		unsigned int n;
-
-		
-
-		for (n=0;n<1000;n++);
-		//usb_send(A_SCAN_CODE);
-		AT91C_BASE_PIOA->PIO_SODR = LED_MASK;							// PIO Set Output Data Register - turns off the four LEDs
-
-
-		for (n=0;n<1000;n++);
-		//usb_send(0);
-		AT91C_BASE_PIOA->PIO_CODR = LED_MASK;							// PIO Set Output Data Register - turns off the four LEDs
-	}
-
-	usb_start();
-	
-
-
-
-	// endless blink loop
-	while (1) {
-		//if  ((pPIO->PIO_ODSR & LED1) == LED1)			// read previous state of LED1
-		//	pPIO->PIO_CODR = LED1;						// turn LED1 (DS1) on	
-		//else
-		//	pPIO->PIO_SODR = LED1;						// turn LED1 (DS1) off
-		//
-		//for (j = 1000000; j != 0; j-- );				// wait 1 second 1000000
-	
-		//IdleCount++;									// count # of times through the idle loop
-		// pPIO->PIO_SODR = LED3;							// turn LED3 (DS3) off
-											
-		// uncomment following four lines to cause a data abort(3 blink code)
-		//if  (IdleCount >= 10) {						// let it blink 5 times then crash
-		//	p = (int *)0x800000;						// this address doesn't exist
-		//	*p = 1234;									// attempt to write data to invalid address
-		//}
-		
-		// uncomment following four lines to cause a prefetch abort (two blinks)
-		//if  (IdleCount >= 10) {						// let it blink 5 times then crash
-		//	pFnPtr = (FnPtr)0x800000;					// this address doesn't exist
-		//	pFnPtr();									// attempt to call a function at a illegal address
-		//}
-	}
+	timerStart();
 }
 
 
+int	main (void) {
+	gamepad_t	pad, next_pad;
 
+	setup();
+	usb_start();
+	initSixPad();
 
+	pad = readSixPad();
+	while (1) {
+		unsigned char up_down;
+		unsigned char left_right;
+		unsigned char a, b, c, start;
+
+		mdelay(10);
+
+		next_pad = readSixPad();
+		if (memcmp(&next_pad, &pad, sizeof(pad)) == 0)
+			continue;
+
+		if (next_pad.up)
+			AT91C_BASE_PIOA->PIO_SODR = LED_MASK;							// PIO Set Output Data Register - turns off the four LEDs
+		else
+			AT91C_BASE_PIOA->PIO_CODR = LED_MASK;							// PIO Set Output Data Register - turns off the four LEDs
+
+		up_down = 0;
+		left_right = 0;
+		a = 0;
+		b = 0;
+		c = 0;
+		start = 0;
+
+		if (next_pad.up)
+			up_down = W_SCAN_CODE;
+		if (next_pad.down)
+			up_down = S_SCAN_CODE;
+		if (next_pad.left)
+			left_right = A_SCAN_CODE;
+		if (next_pad.right)
+			left_right = D_SCAN_CODE;
+		if (next_pad.a)
+			a = Z_SCAN_CODE;
+		if (next_pad.b)
+			b = X_SCAN_CODE;
+		if (next_pad.c)
+			c = C_SCAN_CODE;
+		if (next_pad.start)
+			start = ENTER_SCAN_CODE;
+
+		usb_send_joypad(up_down, left_right, a, b, c, start);
+
+		memcpy(&pad, &next_pad, sizeof(pad));
+	}
+
+}
 

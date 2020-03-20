@@ -25,6 +25,10 @@ typedef struct _AT91S_HID
 	unsigned char (*IsConfigured) (struct _AT91S_HID *pCdc);
 	void (*SendReport)(struct _AT91S_HID *pCdc, char button, char x, char y);
 	void (*SendKey)(struct _AT91S_HID *pCdc, unsigned char button);
+	void (*SendJoypad)(struct _AT91S_HID *pCdc, 
+			unsigned char up_down, unsigned char left_right,
+			unsigned char a, unsigned char b, unsigned char c,
+			unsigned char start);
 } AT91S_HID, *AT91PS_HID;
 
 //* external function description

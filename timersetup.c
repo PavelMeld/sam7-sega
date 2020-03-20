@@ -84,24 +84,7 @@ void	TimerSetup(void) {
 	pTCB->TCB_BMR = 0x15;					// external clocks not used	
 
 
-	//		TC Channel Control Register  TC_CCR    (read/write)
-	//
-	//	|----------------------------------|--------------|------------|-----------|
-	//	|                                      SWTRG          CLKDIS       CLKENS  |
-	//	|----------------------------------|--------------|------------|-----------|
-	//   31                                        2             1           0     
-	//	
-	//	CLKEN = 0    no effect                       
-	//	CLKEN = 1    enables the clock     <===== we select this one                                         
-	//                                             
-	//	CLKDIS = 0   no effect             <===== take  default                       
-	//	CLKDIS = 1   disables the clock                                              
-	//                                                 
-	//  SWTRG = 0    no effect             
-	//  SWTRG = 1    software trigger aserted counter reset and clock starts   <===== we select this one
-	//
 	AT91PS_TC pTC = AT91C_BASE_TC0;		// create a pointer to channel 0 Register structure
-	pTC->TC_CCR = 0x5;					// enable the clock	and start it
 
 	//		TC Channel Mode Register  TC_CMR    (read/write)
 	//
@@ -189,7 +172,7 @@ void	TimerSetup(void) {
 	//	|----------------------------------|----------------------------------------|
 	//   31                              16 15                                    0    
 	//	
-	//	Timer Calculation:   What count gives 50 msec time-out?
+	//	Timer Calculation:   What count gives 1 msec time-out?
 	//
 	//     TIMER_CLOCK5 = MCK / 1024  = 48054841 / 1024  =  46928 hz
 	//
@@ -199,7 +182,7 @@ void	TimerSetup(void) {
 	//                        count =  .050 / 21.3092396896*10**-6
 	//                        count =  2346
 	//
-	pTC->TC_RC = 2346;										
+	pTC->TC_RC = 47;			// 1ms
 
 
 	//		TC Interrupt Enable Register  TC_IER    (write-only)
@@ -270,6 +253,26 @@ void	TimerSetup(void) {
 	//             1  disable External Trigger interrupt    <===== we select this one
 	//
 	pTC->TC_IDR = 0xEF;				// disable all except RC compare interrupt
+
 }
 
+void timerStart() {
+	//		TC Channel Control Register  TC_CCR    (read/write)
+	//
+	//	|----------------------------------|--------------|------------|-----------|
+	//	|                                      SWTRG          CLKDIS       CLKENS  |
+	//	|----------------------------------|--------------|------------|-----------|
+	//   31                                        2             1           0     
+	//	
+	//	CLKEN = 0    no effect                       
+	//	CLKEN = 1    enables the clock     <===== we select this one                                         
+	//                                             
+	//	CLKDIS = 0   no effect             <===== take  default                       
+	//	CLKDIS = 1   disables the clock                                              
+	//                                                 
+	//  SWTRG = 0    no effect             
+	//  SWTRG = 1    software trigger aserted counter reset and clock starts   <===== we select this one
+	//
+	AT91C_BASE_TC0->TC_CCR = 0x5;					// enable the clock	and start it
+}
 

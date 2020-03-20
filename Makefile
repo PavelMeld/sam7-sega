@@ -19,14 +19,14 @@ OD		= $(TOOLS)/arm-elf-objdump
 
 CFLAGS  = -I./ -c -fno-common -O0 -g
 AFLAGS  = -ahls -mapcs-32 -o crt.o
-LFLAGS  =  -Map main.map -Tdemo_at91sam7_p64_blink_flash.cmd
+LFLAGS  =  -Map main.map -T ram.ld
 CPFLAGS = --output-target=binary
 ODFLAGS	= -x --syms
 
-OBJECTS = crt.o	main.o timerisr.o timersetup.o isrsupport.o lowlevelinit.o blinker.o usb.o hid_enumerate.o
+OBJECTS = crt.o	main.o timerisr.o timersetup.o isrsupport.o lowlevelinit.o blinker.o usb.o hid_enumerate.o joypad.o
 
 .flash: main.bin
-	../sam-ba_cdc_linux/sam-ba_64
+	./sam-ba_cdc_linux/sam-ba_64
 
 # make target called by Eclipse (Project -> Clean ...)
 clean:
@@ -39,7 +39,7 @@ all:  main.out
 	$(CP) $(CPFLAGS) main.out main.bin
 	$(OD) $(ODFLAGS) main.out > main.dmp
 
-main.out: $(OBJECTS) demo_at91sam7_p64_blink_flash.cmd 
+main.out: $(OBJECTS) ram.ld
 	@ echo "..linking"
 	$(LD) $(LFLAGS) -o main.out $(OBJECTS) libc.a libm.a libgcc.a 
 
