@@ -83,36 +83,31 @@ void setup() {
 }
 
 
+unsigned char led_state = 0;
+void flash_led() {
+	if (led_state)
+		AT91C_BASE_PIOA->PIO_CODR |= LED1;
+	else
+		AT91C_BASE_PIOA->PIO_SODR |= LED1;
+
+	led_state ^= 1;
+}
+
+
 int	main (void) {
-	gamepad_t	pad, next_pad;
+	gamepad_t	pad;
 
 	setup();
 	usb_start();
 	initSixPad();
 
-	pad = readSixPad();
 
 	while (1) {
-		usb_send_joypad(NULL);
-		mdelay(1000);
-	}
+		//flash_led();
 
-	while (1) {
-
+		pad = readSixPad();
+		usb_send_joypad(&pad);
 		mdelay(10);
-
-		next_pad = readSixPad();
-		if (memcmp(&next_pad, &pad, sizeof(pad)) == 0)
-			continue;
-
-		if (next_pad.up)
-			AT91C_BASE_PIOA->PIO_SODR = LED_MASK;							// PIO Set Output Data Register - turns off the four LEDs
-		else
-			AT91C_BASE_PIOA->PIO_CODR = LED_MASK;							// PIO Set Output Data Register - turns off the four LEDs
-
-		usb_send_joypad(&next_pad);
-
-		memcpy(&pad, &next_pad, sizeof(pad));
 	}
 
 }

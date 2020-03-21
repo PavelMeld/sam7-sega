@@ -332,35 +332,30 @@ static void AT91F_HID_SendJoypad(AT91PS_HID pHid, gamepad_t * pad) {
 	unsigned char abcx	= 0x0F ;
 	unsigned char start_trig = 0x00;
 
+
+	if (pad->up)		up_down = 0;
+	if (pad->down)		up_down = 0xFF;
+	if (pad->left)		left_right = 0;
+	if (pad->right)		left_right = 0xFF;
+	if (pad->a)			abcx |= 0x10;
+	if (pad->b)			abcx |= 0x20;
+	if (pad->c)			abcx |= 0x40;
+	if (pad->x)			abcx |= 0x80;
+	if (pad->start)		start_trig |= 0x20;
+	if (pad->md)		start_trig |= 0x04;
+	if (pad->y)			start_trig |= 0x08;
+	if (pad->z)			start_trig |= 0x02;
+	
+	
+	// Send report to the host
 	pUdp->UDP_FDR[EP_NUMBER] = 0x01;
 	pUdp->UDP_FDR[EP_NUMBER] = 0x80;
 	pUdp->UDP_FDR[EP_NUMBER] = 0x80;
+	pUdp->UDP_FDR[EP_NUMBER] = left_right;
+	pUdp->UDP_FDR[EP_NUMBER] = up_down;
+	pUdp->UDP_FDR[EP_NUMBER] = abcx;
+	pUdp->UDP_FDR[EP_NUMBER] = start_trig;
 	pUdp->UDP_FDR[EP_NUMBER] = 0;
-	pUdp->UDP_FDR[EP_NUMBER] = 0;
-	pUdp->UDP_FDR[EP_NUMBER] = 0;
-	pUdp->UDP_FDR[EP_NUMBER] = 0;
-
-	//if (pad->up)		up_down = 0;
-	//if (pad->down)		up_down = 0xFF;
-	//if (pad->left)		left_right = 0;
-	//if (pad->right)		left_right = 0xFF;
-	//if (pad->a)			abcx |= 0x10;
-	//if (pad->b)			abcx |= 0x20;
-	//if (pad->c)			abcx |= 0x40;
-	//if (pad->x)			abcx |= 0x80;
-	//if (pad->start)		start_trig |= 0x20;
-	//if (pad->md)		start_trig |= 0x04;
-	//
-	//
-	//// Send report to the host
-	//pUdp->UDP_FDR[EP_NUMBER] = 0x01;
-	//pUdp->UDP_FDR[EP_NUMBER] = 0x80;
-	//pUdp->UDP_FDR[EP_NUMBER] = 0x80;
-	//pUdp->UDP_FDR[EP_NUMBER] = left_right;
-	//pUdp->UDP_FDR[EP_NUMBER] = up_down;
-	//pUdp->UDP_FDR[EP_NUMBER] = abcx;
-	//pUdp->UDP_FDR[EP_NUMBER] = start_trig;
-	//pUdp->UDP_FDR[EP_NUMBER] = 0x00;
 
 
 	pUdp->UDP_CSR[EP_NUMBER] |= AT91C_UDP_TXPKTRDY;
